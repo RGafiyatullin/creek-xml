@@ -8,7 +8,7 @@ sealed trait ParserError extends Throwable {
 }
 
 object ParserError {
-  final case class TokError(tokenizerError: TokenizerError) extends ParserError {
+  final case class TokError(parser: Parser, tokenizerError: TokenizerError) extends ParserError {
     override def position: Position = tokenizerError.position
     override def description: String = tokenizerError.description
   }

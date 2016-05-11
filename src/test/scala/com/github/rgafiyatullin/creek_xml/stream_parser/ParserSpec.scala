@@ -136,30 +136,64 @@ class ParserSpec extends FlatSpec with Matchers {
     ))
   }
 
+  it should "continue properly" in {
+    val inputPt1 = "<a>asdfghjkl"
+    val inputPt2 = "zxcvbnm</a>"
+
+    val p0 = Parser.empty.withoutPosition.in(inputPt1)
+    val p1 = p0.in(inputPt2)
+
+    val p1_complete = checkExpectedEvents(p1)(Seq(
+      Event.OpenElementStart(ep, "", "a"),
+      Event.OpenElementEnd(ep),
+      Event.PCData(ep, "asdfghjklzxcvbnm"),
+      Event.CloseElement(ep, "", "a")
+    ))
+    ensureParserInputUnderrun(p1_complete)
+
+    val p0_aboutToUnderrun = checkExpectedEvents(p0)(Seq(
+      Event.OpenElementStart(ep, "", "a"),
+      Event.OpenElementEnd(ep)
+    ))
+    val p0_underrun = ensureParserInputUnderrun(p0_aboutToUnderrun)
+    val p0_feeded = p0_underrun.in(inputPt2)
+    val p0_aboutToUnderrunAgain = checkExpectedEvents(p0_feeded)(Seq(
+      Event.PCData(ep, "asdfghjklzxcvbnm"),
+      Event.CloseElement(ep, "", "a")
+    ))
+    ensureParserInputUnderrun(p0_aboutToUnderrunAgain)
+  }
+
 
   private def common(input: String, expectedEvents: Seq[Event]): Unit = {
     val p0 = Parser.empty.withoutPosition.in(input)
-    val p1 = expectedEvents.foldLeft(p0) {
+    val p1 = checkExpectedEvents(p0)(expectedEvents)
+    ensureParserInputUnderrun(p1)
+  }
+
+  private def checkExpectedEvents(p0: Parser)(expectedEvents: Seq[Event]): Parser = {
+    expectedEvents.foldLeft(p0) {
       case (pIn, eventExpected) =>
         val (eventActual, pOut) = pIn.out
         eventActual should be (eventExpected)
         pOut
     }
-    ensureParserInputUnderrun(p1)
   }
 
-  private def ensureParserInputUnderrun(p: Parser): Unit = {
+  private def ensureParserInputUnderrun(p: Parser): Parser = {
     try {
       p.out
       throw new Exception("Expected input underrun to be thrown")
     } catch {
         case pe @ ParserError.TokError(
+              parser,
               te @ TokenizerError.InputBufferUnderrun(_)) =>
           pe.description.nonEmpty should be (true)
           pe.position should be (ep)
           te.description.nonEmpty should be (true)
           te.position should be (ep)
-          ()
+
+          parser
       }
 
   }

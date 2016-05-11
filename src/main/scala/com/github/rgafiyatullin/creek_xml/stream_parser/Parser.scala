@@ -27,7 +27,7 @@ case class Parser(tokenizer: Tokenizer, output: Queue[Event], state: State) {
       Try(tokenizer.out)
         .recover({
           case tokError: TokenizerError =>
-            throw ParserError.TokError(tokError)
+            throw ParserError.TokError(this, tokError)
         }).get
 
     val (events, nextState) = state.processToken
