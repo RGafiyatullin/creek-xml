@@ -1,6 +1,6 @@
-package com.github.rgafiyatullin.creek_xml.stream_parser.parser
+package com.github.rgafiyatullin.creek_xml.stream_parser.low_level_parser
 
-import com.github.rgafiyatullin.creek_xml.stream_parser.{Event, Token}
+import com.github.rgafiyatullin.creek_xml.stream_parser.tokenizer.Token
 
 import scala.collection.immutable.Queue
 
@@ -9,7 +9,7 @@ sealed trait State {
 }
 
 object State {
-  type ProcessToken = PartialFunction[Token, (Seq[Event], State)]
+  type ProcessToken = PartialFunction[Token, (Seq[LowLevelEvent], State)]
 
   case object Initial extends State {
     override def processToken: ProcessToken = {
@@ -46,7 +46,7 @@ object State {
 
       case token if Initial.processToken.isDefinedAt(token) =>
         val (events, state) = Initial.processToken(token)
-        (Seq(Event.Whitespace(token.position, acc.mkString)) ++ events, state)
+        (Seq(LowLevelEvent.Whitespace(token.position, acc.mkString)) ++ events, state)
     }
   }
 
@@ -60,7 +60,7 @@ object State {
 
       case token if Initial.processToken.isDefinedAt(token) =>
         val (events, state) = Initial.processToken(token)
-        (Seq(Event.PCData(token.position, acc.mkString)) ++ events, state)
+        (Seq(LowLevelEvent.PCData(token.position, acc.mkString)) ++ events, state)
     }
   }
 
@@ -81,7 +81,7 @@ object State {
   final case class ExpectPIClose(target: String, content: String) extends State {
     override def processToken: ProcessToken = {
       case Token.PIClose(position) =>
-        (Seq(Event.ProcessingInstruction(position, target, content)), Initial)
+        (Seq(LowLevelEvent.ProcessingInstruction(position, target, content)), Initial)
     }
   }
 
@@ -96,7 +96,7 @@ object State {
   final case class ExpectCommentClose(text: String) extends State {
     override def processToken: ProcessToken = {
       case Token.CommentClose(position) =>
-        (Seq(Event.Comment(position, text)), Initial)
+        (Seq(LowLevelEvent.Comment(position, text)), Initial)
     }
   }
 
@@ -110,7 +110,7 @@ object State {
   final case class ExpectCDataClose(content: String) extends State {
     override def processToken: ProcessToken = {
       case Token.CDataClose(position) =>
-        (Seq(Event.CData(position, content)), Initial)
+        (Seq(LowLevelEvent.CData(position, content)), Initial)
     }
   }
 
@@ -124,17 +124,17 @@ object State {
               val (left, right) = name.splitAt(splitAt)
               (left, right.drop(1))
           }
-        (Seq(Event.OpenElementStart(position, prefix, localName)), InsideOpenElement)
+        (Seq(LowLevelEvent.OpenElementStart(position, prefix, localName)), InsideOpenElement)
     }
   }
 
   case object InsideOpenElement extends State {
     override def processToken: ProcessToken = {
       case Token.Gt(position) =>
-        (Seq(Event.OpenElementEnd(position)), Initial)
+        (Seq(LowLevelEvent.OpenElementEnd(position)), Initial)
 
       case Token.SlashGt(position) =>
-        (Seq(Event.OpenElementSelfClose(position)), Initial)
+        (Seq(LowLevelEvent.OpenElementSelfClose(position)), Initial)
 
       case Token.XmlName(_, name) =>
         (Seq(), InsideOpenElementAtAttributeName(name))
@@ -155,17 +155,17 @@ object State {
           name.indexOf(':') match {
             case -1 =>
               if (name == "xmlns")
-                Event.AttributeXmlns(position, "", value)
+                LowLevelEvent.AttributeXmlns(position, "", value)
               else
-                Event.UnprefixedAttribute(position, name, value)
+                LowLevelEvent.UnprefixedAttribute(position, name, value)
 
             case splitAt =>
               val (prefix, localNameWithColon) = name.splitAt(splitAt)
               val localName = localNameWithColon.drop(1)
               if (prefix == "xmlns")
-                Event.AttributeXmlns(position, localName, value)
+                LowLevelEvent.AttributeXmlns(position, localName, value)
               else
-                Event.PrefixedAttribute(position, prefix, localName, value)
+                LowLevelEvent.PrefixedAttribute(position, prefix, localName, value)
           }
         (Seq(event), InsideOpenElement)
     }
@@ -184,11 +184,11 @@ object State {
         val event =
           name.indexOf(':') match {
             case -1 =>
-              Event.CloseElement(position, "", name)
+              LowLevelEvent.CloseElement(position, "", name)
 
             case splitAt =>
               val (left, right) = name.splitAt(splitAt)
-              Event.CloseElement(position, left, right.drop(1))
+              LowLevelEvent.CloseElement(position, left, right.drop(1))
           }
         (Seq(event), Initial)
     }

@@ -1,9 +1,9 @@
-package com.github.rgafiyatullin.creek_xml.stream_parser
+package com.github.rgafiyatullin.creek_xml.stream_parser.tokenizer
 
-import scala.collection.immutable.Queue
-import tokenizer.State
+import com.github.rgafiyatullin.creek_xml.stream_parser.common.Position
 
 import scala.annotation.tailrec
+import scala.collection.immutable.Queue
 
 object Tokenizer {
   def empty: Tokenizer = Tokenizer(

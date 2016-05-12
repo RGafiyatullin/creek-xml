@@ -1,5 +1,6 @@
 package com.github.rgafiyatullin.creek_xml.stream_parser
 
+import com.github.rgafiyatullin.creek_xml.stream_parser.common.Position
 import org.scalatest.{FlatSpec, Matchers}
 
 class PositionSpec extends FlatSpec with Matchers {

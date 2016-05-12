@@ -1,6 +1,6 @@
-package com.github.rgafiyatullin.creek_xml.stream_parser
+package com.github.rgafiyatullin.creek_xml.stream_parser.tokenizer
 
-import com.github.rgafiyatullin.creek_xml.stream_parser.tokenizer.State
+import com.github.rgafiyatullin.creek_xml.stream_parser.common.Position
 
 sealed trait TokenizerError extends Throwable {
   def position: Position

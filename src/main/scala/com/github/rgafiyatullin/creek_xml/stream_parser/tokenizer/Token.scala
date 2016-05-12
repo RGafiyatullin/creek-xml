@@ -1,4 +1,6 @@
-package com.github.rgafiyatullin.creek_xml.stream_parser
+package com.github.rgafiyatullin.creek_xml.stream_parser.tokenizer
+
+import com.github.rgafiyatullin.creek_xml.stream_parser.common.Position
 
 sealed trait Token {
   def position: Position
