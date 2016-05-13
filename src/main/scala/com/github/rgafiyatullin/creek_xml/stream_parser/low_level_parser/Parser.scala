@@ -8,18 +8,18 @@ import scala.collection.immutable.Queue
 import scala.util.Try
 
 
-object LowLevelParser {
-  def empty: LowLevelParser = LowLevelParser(
+object Parser {
+  def empty: Parser = Parser(
     Tokenizer.empty,
     Queue.empty,
     State.Initial)
 }
 
-case class LowLevelParser(tokenizer: Tokenizer, output: Queue[LowLevelEvent], state: State) {
-  def in(string: String): LowLevelParser = copy(tokenizer = tokenizer.in(string))
-  def in(char: Char): LowLevelParser = copy(tokenizer = tokenizer.in(char))
+case class Parser(tokenizer: Tokenizer, output: Queue[Event], state: State) {
+  def in(string: String): Parser = copy(tokenizer = tokenizer.in(string))
+  def in(char: Char): Parser = copy(tokenizer = tokenizer.in(char))
 
-  def out: (LowLevelEvent, LowLevelParser) =
+  def out: (Event, Parser) =
     if (output.isEmpty)
       outProcessingInputLoop
     else {
@@ -27,16 +27,16 @@ case class LowLevelParser(tokenizer: Tokenizer, output: Queue[LowLevelEvent], st
       (event, copy(output = nextOutput))
     }
 
-  def withoutPosition: LowLevelParser =
+  def withoutPosition: Parser =
     copy(tokenizer = tokenizer.withoutPosition)
 
   @tailrec
-  private def outProcessingInputLoop: (LowLevelEvent, LowLevelParser) = {
+  private def outProcessingInputLoop: (Event, Parser) = {
     val (token, nextTokenizer) =
       Try(tokenizer.out)
         .recover({
           case tokError: TokenizerError =>
-            throw LowLevelParserError.TokError(this, tokError)
+            throw ParserError.TokError(this, tokError)
         }).get
 
     val (events, nextState) = state.processToken
@@ -53,7 +53,7 @@ case class LowLevelParser(tokenizer: Tokenizer, output: Queue[LowLevelEvent], st
   }
 
   private def throwUnexpectedToken(state: State)(token: Token): Nothing =
-    throw LowLevelParserError.UnexpectedToken(token, state)
+    throw ParserError.UnexpectedToken(token, state)
 
 }
 
