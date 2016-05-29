@@ -1,9 +1,6 @@
 package com.github.rgafiyatullin.creek_xml.stream_parser.high_level_parser
 
-import com.github.rgafiyatullin.creek_xml.stream_parser.low_level_parser.{
-  Event => LowLevelEvent,
-  Parser => LowLevelParser,
-  ParserError => LowLevelParserError}
+import com.github.rgafiyatullin.creek_xml.stream_parser.low_level_parser.{LowLevelEvent, LowLevelParser, LowLevelParserError}
 
 import scala.collection.immutable.Queue
 import scala.util.Try
@@ -12,10 +9,13 @@ object HighLevelParser {
   def empty: HighLevelParser = HighLevelParser(
       LowLevelParser.empty,
       Queue.empty,
-      State.initialState)
+      HighLevelState.initialState)
 }
 
-case class HighLevelParser(llParser: LowLevelParser, output: Queue[HighLevelEvent], state: State) {
+case class HighLevelParser(llParser: LowLevelParser, output: Queue[HighLevelEvent], state: HighLevelState) {
+  def withoutPosition: HighLevelParser =
+    copy(llParser = llParser.withoutPosition)
+
   def in(char: Char): HighLevelParser =
     copy(llParser = llParser.in(char))
 
@@ -34,7 +34,7 @@ case class HighLevelParser(llParser: LowLevelParser, output: Queue[HighLevelEven
     val (nextLLEvent, nextLLParser) = Try(llParser.out)
       .recover {
         case llError: LowLevelParserError =>
-          throw HighLevelParserError.LowLevel(llError)
+          throw HighLevelParserError.LowLevel(this, llError)
       }.get
     val (events, nextState) = state.processLowLevelEvent
       .applyOrElse(nextLLEvent, throwUnexpectedLLEvent(state))
@@ -51,6 +51,6 @@ case class HighLevelParser(llParser: LowLevelParser, output: Queue[HighLevelEven
 
   }
 
-  def throwUnexpectedLLEvent(s: State)(llEvent: LowLevelEvent): Nothing =
+  def throwUnexpectedLLEvent(s: HighLevelState)(llEvent: LowLevelEvent): Nothing =
     throw HighLevelParserError.UnexpectedLLEvent(state, llEvent)
 }

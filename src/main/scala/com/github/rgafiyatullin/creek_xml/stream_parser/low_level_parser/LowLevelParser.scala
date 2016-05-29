@@ -8,18 +8,18 @@ import scala.collection.immutable.Queue
 import scala.util.Try
 
 
-object Parser {
-  def empty: Parser = Parser(
+object LowLevelParser {
+  def empty: LowLevelParser = LowLevelParser(
     Tokenizer.empty,
     Queue.empty,
-    State.Initial)
+    LowLevelState.Initial)
 }
 
-case class Parser(tokenizer: Tokenizer, output: Queue[Event], state: State) {
-  def in(string: String): Parser = copy(tokenizer = tokenizer.in(string))
-  def in(char: Char): Parser = copy(tokenizer = tokenizer.in(char))
+case class LowLevelParser(tokenizer: Tokenizer, output: Queue[LowLevelEvent], state: LowLevelState) {
+  def in(string: String): LowLevelParser = copy(tokenizer = tokenizer.in(string))
+  def in(char: Char): LowLevelParser = copy(tokenizer = tokenizer.in(char))
 
-  def out: (Event, Parser) =
+  def out: (LowLevelEvent, LowLevelParser) =
     if (output.isEmpty)
       outProcessingInputLoop
     else {
@@ -27,16 +27,16 @@ case class Parser(tokenizer: Tokenizer, output: Queue[Event], state: State) {
       (event, copy(output = nextOutput))
     }
 
-  def withoutPosition: Parser =
+  def withoutPosition: LowLevelParser =
     copy(tokenizer = tokenizer.withoutPosition)
 
   @tailrec
-  private def outProcessingInputLoop: (Event, Parser) = {
+  private def outProcessingInputLoop: (LowLevelEvent, LowLevelParser) = {
     val (token, nextTokenizer) =
       Try(tokenizer.out)
         .recover({
           case tokError: TokenizerError =>
-            throw ParserError.TokError(this, tokError)
+            throw LowLevelParserError.TokError(this, tokError)
         }).get
 
     val (events, nextState) = state.processToken
@@ -52,8 +52,8 @@ case class Parser(tokenizer: Tokenizer, output: Queue[Event], state: State) {
     }
   }
 
-  private def throwUnexpectedToken(state: State)(token: Token): Nothing =
-    throw ParserError.UnexpectedToken(token, state)
+  private def throwUnexpectedToken(state: LowLevelState)(token: Token): Nothing =
+    throw LowLevelParserError.UnexpectedToken(token, state)
 
 }
 

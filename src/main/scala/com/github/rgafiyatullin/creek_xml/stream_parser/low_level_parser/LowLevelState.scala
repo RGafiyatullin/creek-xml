@@ -4,14 +4,14 @@ import com.github.rgafiyatullin.creek_xml.stream_parser.tokenizer.Token
 
 import scala.collection.immutable.Queue
 
-sealed trait State {
-  def processToken: State.ProcessToken
+sealed trait LowLevelState {
+  def processToken: LowLevelState.ProcessToken
 }
 
-object State {
-  type ProcessToken = PartialFunction[Token, (Seq[Event], State)]
+object LowLevelState {
+  type ProcessToken = PartialFunction[Token, (Seq[LowLevelEvent], LowLevelState)]
 
-  case object Initial extends State {
+  case object Initial extends LowLevelState {
     override def processToken: ProcessToken = {
       case Token.PIOpen(_) =>
         (Seq(), ExpectPITarget)
@@ -36,7 +36,7 @@ object State {
     }
   }
 
-  final case class IgnorableWhitespace(acc: Queue[Char]) extends State {
+  final case class IgnorableWhitespace(acc: Queue[Char]) extends LowLevelState {
     override def processToken: ProcessToken = {
       case Token.Whitespace(_, ws) =>
         (Seq(), copy(acc = acc.enqueue(ws)))
@@ -46,11 +46,11 @@ object State {
 
       case token if Initial.processToken.isDefinedAt(token) =>
         val (events, state) = Initial.processToken(token)
-        (Seq(Event.Whitespace(token.position, acc.mkString)) ++ events, state)
+        (Seq(LowLevelEvent.Whitespace(token.position, acc.mkString)) ++ events, state)
     }
   }
 
-  final case class InsidePCData(acc: Queue[Char]) extends State {
+  final case class InsidePCData(acc: Queue[Char]) extends LowLevelState {
     override def processToken: ProcessToken = {
       case Token.Character(_, ch) =>
         (Seq(), copy(acc = acc.enqueue(ch)))
@@ -60,61 +60,61 @@ object State {
 
       case token if Initial.processToken.isDefinedAt(token) =>
         val (events, state) = Initial.processToken(token)
-        (Seq(Event.PCData(token.position, acc.mkString)) ++ events, state)
+        (Seq(LowLevelEvent.PCData(token.position, acc.mkString)) ++ events, state)
     }
   }
 
-  case object ExpectPITarget extends State {
+  case object ExpectPITarget extends LowLevelState {
     override def processToken: ProcessToken = {
       case Token.PITarget(_, target) =>
         (Seq(), ExpectPIContent(target))
     }
   }
 
-  final case class ExpectPIContent(target: String) extends State {
+  final case class ExpectPIContent(target: String) extends LowLevelState {
     override def processToken: ProcessToken = {
       case Token.PIContent(_, content) =>
         (Seq(), ExpectPIClose(target, content))
     }
   }
 
-  final case class ExpectPIClose(target: String, content: String) extends State {
+  final case class ExpectPIClose(target: String, content: String) extends LowLevelState {
     override def processToken: ProcessToken = {
       case Token.PIClose(position) =>
-        (Seq(Event.ProcessingInstruction(position, target, content)), Initial)
+        (Seq(LowLevelEvent.ProcessingInstruction(position, target, content)), Initial)
     }
   }
 
 
-  case object ExpectCommentContent extends State {
+  case object ExpectCommentContent extends LowLevelState {
     override def processToken: ProcessToken = {
       case Token.CommentText(_, text) =>
         (Seq(), ExpectCommentClose(text))
     }
   }
 
-  final case class ExpectCommentClose(text: String) extends State {
+  final case class ExpectCommentClose(text: String) extends LowLevelState {
     override def processToken: ProcessToken = {
       case Token.CommentClose(position) =>
-        (Seq(Event.Comment(position, text)), Initial)
+        (Seq(LowLevelEvent.Comment(position, text)), Initial)
     }
   }
 
-  case object ExpectCDataContent extends State {
+  case object ExpectCDataContent extends LowLevelState {
     override def processToken: ProcessToken = {
       case Token.CDataContent(_, content) =>
         (Seq(), ExpectCDataClose(content))
     }
   }
 
-  final case class ExpectCDataClose(content: String) extends State {
+  final case class ExpectCDataClose(content: String) extends LowLevelState {
     override def processToken: ProcessToken = {
       case Token.CDataClose(position) =>
-        (Seq(Event.CData(position, content)), Initial)
+        (Seq(LowLevelEvent.CData(position, content)), Initial)
     }
   }
 
-  case object OpenElementStartExpectXmlName extends State {
+  case object OpenElementStartExpectXmlName extends LowLevelState {
     override def processToken: ProcessToken = {
       case Token.XmlName(position, name) =>
         val (prefix, localName) =
@@ -124,71 +124,71 @@ object State {
               val (left, right) = name.splitAt(splitAt)
               (left, right.drop(1))
           }
-        (Seq(Event.OpenElementStart(position, prefix, localName)), InsideOpenElement)
+        (Seq(LowLevelEvent.OpenElementStart(position, prefix, localName)), InsideOpenElement)
     }
   }
 
-  case object InsideOpenElement extends State {
+  case object InsideOpenElement extends LowLevelState {
     override def processToken: ProcessToken = {
       case Token.Gt(position) =>
-        (Seq(Event.OpenElementEnd(position)), Initial)
+        (Seq(LowLevelEvent.OpenElementEnd(position)), Initial)
 
       case Token.SlashGt(position) =>
-        (Seq(Event.OpenElementSelfClose(position)), Initial)
+        (Seq(LowLevelEvent.OpenElementSelfClose(position)), Initial)
 
       case Token.XmlName(_, name) =>
         (Seq(), InsideOpenElementAtAttributeName(name))
     }
   }
 
-  final case class InsideOpenElementAtAttributeName(name: String) extends State {
+  final case class InsideOpenElementAtAttributeName(name: String) extends LowLevelState {
     override def processToken: ProcessToken = {
       case Token.EqSign(_) =>
         (Seq(), InsideOpenElementExpectAttributeValue(name))
     }
   }
 
-  final case class InsideOpenElementExpectAttributeValue(name: String) extends State {
+  final case class InsideOpenElementExpectAttributeValue(name: String) extends LowLevelState {
     override def processToken: ProcessToken = {
       case Token.AttributeValue(position, value) =>
         val event =
           name.indexOf(':') match {
             case -1 =>
               if (name == "xmlns")
-                Event.AttributeXmlns(position, "", value)
+                LowLevelEvent.AttributeXmlns(position, "", value)
               else
-                Event.UnprefixedAttribute(position, name, value)
+                LowLevelEvent.UnprefixedAttribute(position, name, value)
 
             case splitAt =>
               val (prefix, localNameWithColon) = name.splitAt(splitAt)
               val localName = localNameWithColon.drop(1)
               if (prefix == "xmlns")
-                Event.AttributeXmlns(position, localName, value)
+                LowLevelEvent.AttributeXmlns(position, localName, value)
               else
-                Event.PrefixedAttribute(position, prefix, localName, value)
+                LowLevelEvent.PrefixedAttribute(position, prefix, localName, value)
           }
         (Seq(event), InsideOpenElement)
     }
   }
 
-  case object ClosingElementExpectXmlName extends State {
+  case object ClosingElementExpectXmlName extends LowLevelState {
     override def processToken: ProcessToken = {
       case Token.XmlName(_, name) =>
         (Seq(), ClosingElementExpectGt(name))
     }
   }
 
-  final case class ClosingElementExpectGt(name: String) extends State {
+  final case class ClosingElementExpectGt(name: String) extends LowLevelState {
     override def processToken: ProcessToken = {
       case Token.Gt(position) =>
         val event =
           name.indexOf(':') match {
             case -1 =>
-              Event.CloseElement(position, "", name)
+              LowLevelEvent.CloseElement(position, "", name)
 
             case splitAt =>
               val (left, right) = name.splitAt(splitAt)
-              Event.CloseElement(position, left, right.drop(1))
+              LowLevelEvent.CloseElement(position, left, right.drop(1))
           }
         (Seq(event), Initial)
     }

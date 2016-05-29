@@ -1,7 +1,109 @@
 package com.github.rgafiyatullin.creek_xml.stream_parser
 
+import com.github.rgafiyatullin.creek_xml.stream_parser.common.Position
+import com.github.rgafiyatullin.creek_xml.stream_parser.high_level_parser.{Attribute, HighLevelEvent, HighLevelParser, HighLevelParserError}
+import com.github.rgafiyatullin.creek_xml.stream_parser.low_level_parser.LowLevelParserError
+import com.github.rgafiyatullin.creek_xml.stream_parser.tokenizer.TokenizerError
 import org.scalatest.{FlatSpec, Matchers}
 
 class HighLevelParserSpec extends FlatSpec with Matchers {
+  val ep = Position.withoutPosition
+
+  "An empty HighLevelParser" should "throw input-underrun error" in {
+    val p0 = HighLevelParser.empty.withoutPosition
+    ensureParserInputUnderrun(p0)
+  }
+
+  "A HighLevelParser" should "parse #1 (element open)" in {
+    common("<prefix:local-name xmlns:prefix='namespace'>", Seq(
+      HighLevelEvent.ElementOpen(ep, "prefix", "local-name", "namespace", Seq(Attribute.NsImport("prefix", "namespace")))
+    ))
+  }
+
+  it should "parse #2 (element self-closing)" in {
+    common("<prefix:local-name xmlns:prefix='namespace' />", Seq(
+      HighLevelEvent.ElementSelfClosing(ep, "prefix", "local-name", "namespace", Seq(Attribute.NsImport("prefix", "namespace")))
+    ))
+  }
+
+  it should "parse #3 (element open and close)" in {
+    common("<prefix:local-name xmlns:prefix='namespace'></prefix:local-name>", Seq(
+      HighLevelEvent.ElementOpen(ep, "prefix", "local-name", "namespace", Seq(Attribute.NsImport("prefix", "namespace"))),
+      HighLevelEvent.ElementClose(ep, "prefix", "local-name", "namespace")
+    ))
+  }
+
+  it should "parse #4 (processing instruction)" in {
+    common("<?target content?>", Seq(
+      HighLevelEvent.ProcessingInstrutcion(ep, "target", "content")
+    ))
+  }
+
+  it should "parse #5 (cdata)" in {
+    common("<![CDATA[text]]>", Seq(
+      HighLevelEvent.CData(ep, "text")
+    ))
+  }
+
+  it should "parse #6 (pcdata)" in {
+    common("<text xmlns='namespace'>text</text>", Seq(
+      HighLevelEvent.ElementOpen(ep, "", "text", "namespace", Seq(Attribute.NsImport("", "namespace"))),
+      HighLevelEvent.PCData(ep, "text"),
+      HighLevelEvent.ElementClose(ep, "", "text", "namespace")
+    ))
+  }
+
+  it should "parse #7 (comment)" in {
+    common("<!-- a comment goes here -->", Seq(
+      HighLevelEvent.Comment(ep, " a comment goes here ")
+    ))
+  }
+
+  it should "parse #8 (whitespace)" in {
+    common("<whitespace xmlns='namespace'>\r\n \t</whitespace>", Seq(
+      HighLevelEvent.ElementOpen(ep, "", "whitespace", "namespace", Seq(Attribute.NsImport("", "namespace"))),
+      HighLevelEvent.Whitespace(ep, "\r\n \t"),
+      HighLevelEvent.ElementClose(ep, "", "whitespace", "namespace")
+    ))
+  }
+
+
+
+
+
+
+
+  private def common(input: String, expectedEvents: Seq[HighLevelEvent]): Unit = {
+    val p0 = HighLevelParser.empty.withoutPosition.in(input)
+    val p1 = checkExpectedEvents(p0)(expectedEvents)
+    ensureParserInputUnderrun(p1)
+  }
+
+  private def checkExpectedEvents(p0: HighLevelParser)(expectedEvents: Seq[HighLevelEvent]): HighLevelParser = {
+    expectedEvents.foldLeft(p0) {
+      case (pIn, eventExpected) =>
+        val (eventActual, pOut) = pIn.out
+        eventActual should be (eventExpected)
+        pOut
+    }
+  }
+
+
+  private def ensureParserInputUnderrun(p: HighLevelParser): HighLevelParser = {
+    try {
+      val undesiredEvent = p.out
+      throw new Exception("Expected input underrun to be thrown. Got event: %s".format(undesiredEvent))
+    } catch {
+      case pe @ HighLevelParserError.LowLevel(parser,
+                  LowLevelParserError.TokError(_,
+                    TokenizerError.InputBufferUnderrun(_)))
+      =>
+        pe.description.nonEmpty should be (true)
+        pe.position should be (ep)
+
+        parser
+    }
+
+  }
 
 }
