@@ -19,6 +19,9 @@ case class Tokenizer(
   input: Queue[(Char, Position)],
   output: Queue[Token])
 {
+  def inputBuffer: Queue[Char] =
+    input.map(_._1)
+
   def withoutPosition: Tokenizer =
     copy(position = Position.withoutPosition)
 

@@ -16,6 +16,8 @@ object LowLevelParser {
 }
 
 case class LowLevelParser(tokenizer: Tokenizer, output: Queue[LowLevelEvent], state: LowLevelState) {
+  def inputBuffer: Queue[Char] = tokenizer.inputBuffer
+
   def in(string: String): LowLevelParser = copy(tokenizer = tokenizer.in(string))
   def in(char: Char): LowLevelParser = copy(tokenizer = tokenizer.in(char))
 

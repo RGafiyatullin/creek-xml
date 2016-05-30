@@ -16,6 +16,8 @@ case class HighLevelParser(llParser: LowLevelParser, output: Queue[HighLevelEven
   def withoutPosition: HighLevelParser =
     copy(llParser = llParser.withoutPosition)
 
+  def inputBuffer: Queue[Char] = llParser.inputBuffer
+
   def in(char: Char): HighLevelParser =
     copy(llParser = llParser.in(char))
 

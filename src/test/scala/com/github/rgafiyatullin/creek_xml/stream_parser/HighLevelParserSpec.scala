@@ -67,6 +67,85 @@ class HighLevelParserSpec extends FlatSpec with Matchers {
     ))
   }
 
+  it should "parse #9 (a complex example)" in {
+    common(
+      """<streams:stream xmlns:streams='http://streams' xmlns='jabber:client' from='im.localhost'>
+        | <streams:features>
+        |  <feature xmlns='some-namespace'/>
+        |  <feature xmlns='with-cdata'><![CDATA[some-text]]></feature>
+        |  <feature xmlns='with-pcdata'>some-text</feature>
+        | </streams:features>
+        |</streams:stream>
+      """.stripMargin, Seq(
+        HighLevelEvent.ElementOpen(ep, "streams", "stream", "http://streams", Seq(
+          Attribute.NsImport("streams", "http://streams"),
+          Attribute.NsImport("", "jabber:client"),
+          Attribute.Unprefixed("from", "im.localhost") )),
+        HighLevelEvent.Whitespace(ep, "\n "),
+        HighLevelEvent.ElementOpen(ep, "streams", "features", "http://streams", Seq()),
+        HighLevelEvent.Whitespace(ep, "\n  "),
+        HighLevelEvent.ElementSelfClosing(ep, "", "feature", "some-namespace", Seq(
+          Attribute.NsImport("", "some-namespace") )),
+        HighLevelEvent.Whitespace(ep, "\n  "),
+        HighLevelEvent.ElementOpen(ep, "", "feature", "with-cdata", Seq(
+          Attribute.NsImport("", "with-cdata") )),
+        HighLevelEvent.CData(ep, "some-text"),
+        HighLevelEvent.ElementClose(ep, "", "feature", "with-cdata"),
+        HighLevelEvent.Whitespace(ep, "\n  "),
+        HighLevelEvent.ElementOpen(ep, "", "feature", "with-pcdata", Seq(
+          Attribute.NsImport("", "with-pcdata") )),
+        HighLevelEvent.PCData(ep, "some-text"),
+        HighLevelEvent.ElementClose(ep, "", "feature", "with-pcdata"),
+        HighLevelEvent.Whitespace(ep, "\n "),
+        HighLevelEvent.ElementClose(ep, "streams", "features", "http://streams"),
+        HighLevelEvent.Whitespace(ep, "\n"),
+        HighLevelEvent.ElementClose(ep, "streams", "stream", "http://streams")
+      ))
+  }
+
+  it should "parse #9 (a complex example with unparsed rubbish accessed via .inputBuffer)" in {
+    val input =
+      """<streams:stream xmlns:streams='http://streams' xmlns='jabber:client' from='im.localhost'>
+        | <streams:features>
+        |  <feature xmlns='some-namespace'/>
+        |  <feature xmlns='with-cdata'><![CDATA[some-text]]></feature>
+        |  <feature xmlns='with-pcdata'>some-text</feature>
+        | </streams:features>
+        |</streams:stream>
+        |Some rubbish goes here...""".stripMargin
+
+    val expectedEvents = Seq(
+        HighLevelEvent.ElementOpen(ep, "streams", "stream", "http://streams", Seq(
+          Attribute.NsImport("streams", "http://streams"),
+          Attribute.NsImport("", "jabber:client"),
+          Attribute.Unprefixed("from", "im.localhost") )),
+        HighLevelEvent.Whitespace(ep, "\n "),
+        HighLevelEvent.ElementOpen(ep, "streams", "features", "http://streams", Seq()),
+        HighLevelEvent.Whitespace(ep, "\n  "),
+        HighLevelEvent.ElementSelfClosing(ep, "", "feature", "some-namespace", Seq(
+          Attribute.NsImport("", "some-namespace") )),
+        HighLevelEvent.Whitespace(ep, "\n  "),
+        HighLevelEvent.ElementOpen(ep, "", "feature", "with-cdata", Seq(
+          Attribute.NsImport("", "with-cdata") )),
+        HighLevelEvent.CData(ep, "some-text"),
+        HighLevelEvent.ElementClose(ep, "", "feature", "with-cdata"),
+        HighLevelEvent.Whitespace(ep, "\n  "),
+        HighLevelEvent.ElementOpen(ep, "", "feature", "with-pcdata", Seq(
+          Attribute.NsImport("", "with-pcdata") )),
+        HighLevelEvent.PCData(ep, "some-text"),
+        HighLevelEvent.ElementClose(ep, "", "feature", "with-pcdata"),
+        HighLevelEvent.Whitespace(ep, "\n "),
+        HighLevelEvent.ElementClose(ep, "streams", "features", "http://streams"),
+        HighLevelEvent.Whitespace(ep, "\n"),
+        HighLevelEvent.ElementClose(ep, "streams", "stream", "http://streams")
+      )
+
+    val p0 = HighLevelParser.empty.withoutPosition.in(input)
+    val p1 = checkExpectedEvents(p0)(expectedEvents)
+
+    p1.inputBuffer.mkString should be ("\nSome rubbish goes here...")
+  }
+
 
 
 
