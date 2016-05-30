@@ -1,6 +1,7 @@
 package com.github.rgafiyatullin.creek_xml.stream_parser.high_level_parser
 
-import com.github.rgafiyatullin.creek_xml.stream_parser.common.Position
+import com.github.rgafiyatullin.creek_xml.common.Attribute
+import com.github.rgafiyatullin.creek_xml.common.Position
 import com.github.rgafiyatullin.creek_xml.stream_parser.low_level_parser.LowLevelEvent
 
 import scala.collection.immutable.Queue

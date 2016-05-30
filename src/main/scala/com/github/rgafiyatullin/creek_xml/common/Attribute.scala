@@ -1,4 +1,4 @@
-package com.github.rgafiyatullin.creek_xml.stream_parser.high_level_parser
+package com.github.rgafiyatullin.creek_xml.common
 
 sealed trait Attribute
 

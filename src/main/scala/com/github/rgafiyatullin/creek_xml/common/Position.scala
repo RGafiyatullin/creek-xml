@@ -1,4 +1,4 @@
-package com.github.rgafiyatullin.creek_xml.stream_parser.common
+package com.github.rgafiyatullin.creek_xml.common
 
 sealed trait Position {
   def bump(ch: Char): Position

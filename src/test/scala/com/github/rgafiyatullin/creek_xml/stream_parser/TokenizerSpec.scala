@@ -1,6 +1,6 @@
 package com.github.rgafiyatullin.creek_xml.stream_parser
 
-import com.github.rgafiyatullin.creek_xml.stream_parser.common.Position
+import com.github.rgafiyatullin.creek_xml.common.Position
 import com.github.rgafiyatullin.creek_xml.stream_parser.tokenizer.{Token, Tokenizer, TokenizerError}
 import org.scalatest.{FlatSpec, Matchers}
 
