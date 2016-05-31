@@ -1,7 +1,7 @@
 package com.github.rgafiyatullin.creek_xml.dom
 
-import com.github.rgafiyatullin.creek_xml.common.Attribute
-import com.github.rgafiyatullin.creek_xml.stream_parser.high_level_parser.{HighLevelEvent, NsImportCtx}
+import com.github.rgafiyatullin.creek_xml.common.{Attribute, HighLevelEvent}
+import com.github.rgafiyatullin.creek_xml.stream_parser.high_level_parser.NsImportCtx
 
 import scala.collection.immutable.Queue
 

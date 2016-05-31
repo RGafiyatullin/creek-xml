@@ -1,5 +1,6 @@
 package com.github.rgafiyatullin.creek_xml.stream_parser.low_level_parser
 
+import com.github.rgafiyatullin.creek_xml.common.LowLevelEvent
 import com.github.rgafiyatullin.creek_xml.stream_parser._
 import com.github.rgafiyatullin.creek_xml.stream_parser.tokenizer.{Token, Tokenizer, TokenizerError}
 

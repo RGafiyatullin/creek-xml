@@ -1,8 +1,7 @@
 package com.github.rgafiyatullin.creek_xml.stream_parser
 
-import com.github.rgafiyatullin.creek_xml.common.Attribute
-import com.github.rgafiyatullin.creek_xml.common.Position
-import com.github.rgafiyatullin.creek_xml.stream_parser.high_level_parser.{HighLevelEvent, HighLevelParser, HighLevelParserError}
+import com.github.rgafiyatullin.creek_xml.common.{Attribute, HighLevelEvent, Position}
+import com.github.rgafiyatullin.creek_xml.stream_parser.high_level_parser.{HighLevelParser, HighLevelParserError}
 import com.github.rgafiyatullin.creek_xml.stream_parser.low_level_parser.LowLevelParserError
 import com.github.rgafiyatullin.creek_xml.stream_parser.tokenizer.TokenizerError
 import org.scalatest.{FlatSpec, Matchers}

@@ -1,6 +1,7 @@
 package com.github.rgafiyatullin.creek_xml.stream_parser.high_level_parser
 
-import com.github.rgafiyatullin.creek_xml.stream_parser.low_level_parser.{LowLevelEvent, LowLevelParser, LowLevelParserError}
+import com.github.rgafiyatullin.creek_xml.common.{HighLevelEvent, LowLevelEvent}
+import com.github.rgafiyatullin.creek_xml.stream_parser.low_level_parser.{LowLevelParser, LowLevelParserError}
 
 import scala.collection.immutable.Queue
 import scala.util.Try

@@ -1,7 +1,6 @@
 package com.github.rgafiyatullin.creek_xml.dom
 
-import com.github.rgafiyatullin.creek_xml.common.{Attribute, Position}
-import com.github.rgafiyatullin.creek_xml.stream_parser.high_level_parser.HighLevelEvent
+import com.github.rgafiyatullin.creek_xml.common.{Attribute, HighLevelEvent, Position}
 import org.scalatest.{FlatSpec, Matchers}
 
 class NodeBuilderSpec extends FlatSpec with Matchers {
