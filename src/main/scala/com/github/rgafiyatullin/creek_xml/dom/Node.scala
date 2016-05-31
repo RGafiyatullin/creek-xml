@@ -1,12 +1,13 @@
 package com.github.rgafiyatullin.creek_xml.dom
 
-import com.github.rgafiyatullin.creek_xml.common.{Attribute, HighLevelEvent, Position}
+import com.github.rgafiyatullin.creek_xml.common.{Attribute, HighLevelEvent, Position, QName}
 import com.github.rgafiyatullin.creek_xml.common.Attribute.Unprefixed
 import com.github.rgafiyatullin.creek_xml.stream_parser.high_level_parser.NsImportCtx
 
 import scala.collection.immutable.Queue
 
 sealed trait Node {
+  def qName: QName = QName.empty
   def text: String
   def attributes: Seq[Attribute] = Seq()
   def children: Seq[Node] = Seq()
@@ -22,11 +23,11 @@ sealed trait Node {
   def render(eq: Queue[HighLevelEvent], nsCtx: NsImportCtx = NsImportCtx.empty): Queue[HighLevelEvent]
 
   protected val emptyPosition = Position.withoutPosition
-
-
 }
 
 case class Element(ns: String, localName: String, override val attributes: Seq[Attribute], override val children: Seq[Node]) extends Node {
+  override def qName: QName = QName(ns, localName)
+
   override def text: String =
     children.map(_.text).mkString
 
