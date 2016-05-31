@@ -29,14 +29,20 @@ case class LowLevelWriter(outBuffer: Queue[String]) {
       case LowLevelEvent.AttributeXmlns(_, prefix, namespace) if prefix.isEmpty =>
         s" xmlns='$namespace'"
 
-      case LowLevelEvent.OpenElementStart(_, prefix, localName) =>
+      case LowLevelEvent.OpenElementStart(_, prefix, localName) if !prefix.isEmpty =>
         s"<$prefix:$localName"
+
+      case LowLevelEvent.OpenElementStart(_, prefix, localName) if prefix.isEmpty =>
+        s"<$localName"
 
       case LowLevelEvent.OpenElementEnd(_) =>
         ">"
 
-      case LowLevelEvent.CloseElement(_, prefix, localName) =>
+      case LowLevelEvent.CloseElement(_, prefix, localName) if !prefix.isEmpty =>
         s"</$prefix:$localName>"
+
+      case LowLevelEvent.CloseElement(_, prefix, localName) if prefix.isEmpty =>
+        s"</$localName>"
 
       case LowLevelEvent.OpenElementSelfClose(_) =>
         "/>"

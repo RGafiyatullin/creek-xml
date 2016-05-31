@@ -17,6 +17,11 @@ class LowLevelWriterSpec extends FlatSpec with Matchers {
       LowLevelEvent.OpenElementEnd(ep),
       LowLevelEvent.OpenElementStart(ep, "streams", "features"),
       LowLevelEvent.OpenElementSelfClose(ep),
+      LowLevelEvent.OpenElementStart(ep, "", "presence"),
+      LowLevelEvent.OpenElementEnd(ep),
+      LowLevelEvent.OpenElementStart(ep, "", "x"),
+      LowLevelEvent.OpenElementSelfClose(ep),
+      LowLevelEvent.CloseElement(ep, "", "presence"),
       LowLevelEvent.CloseElement(ep, "streams", "stream")
     ).foldLeft(LowLevelWriter.empty)(_.in(_)).out._1.mkString
 
@@ -33,6 +38,10 @@ class LowLevelWriterSpec extends FlatSpec with Matchers {
         ">" +
         "<streams:features" +
         "/>" +
+        "<presence" +
+        ">" +
+        "<x/>" +
+        "</presence>" +
         "</streams:stream>"
     )
   }

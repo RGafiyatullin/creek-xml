@@ -10,6 +10,8 @@ object NsImportCtx {
 }
 
 final case class NsImportCtx(parent: Option[NsImportCtx], imports: Map[String, String]) {
+  lazy val reverseImports = imports.map { case (prefix, namespace) => (namespace, prefix) }
+
   def push: NsImportCtx =
     NsImportCtx.empty.copy(parent = Some(this))
 
@@ -19,6 +21,22 @@ final case class NsImportCtx(parent: Option[NsImportCtx], imports: Map[String, S
       .orElse(
         parent.flatMap(
           _.resolvePrefix(prefix)))
+
+  def chosePrefix(namespace: String, ignoredPrefixes: Set[String] = Set.empty): Option[String] =
+    reverseImports.get(namespace) match {
+      case Some(prefix) if !ignoredPrefixes.contains(prefix) =>
+        Some(prefix)
+
+      case _ =>
+        parent.flatMap(
+          _.chosePrefix(
+            namespace,
+            imports.keys
+              .foldLeft(ignoredPrefixes)(_ + _)
+          ) )
+    }
+
+
 
   def add(position: Position, prefix: String, namespace: String): NsImportCtx =
     imports.get(prefix) match {
