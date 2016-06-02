@@ -31,6 +31,19 @@ case class Element(ns: String, localName: String, override val attributes: Seq[A
   override def text: String =
     children.map(_.text).mkString
 
+  def setAttribute(name: String, value: Option[String]) = {
+    val attributes1 = attributes.filter {
+      case Attribute.Unprefixed(n, _) if n == name => false
+      case _ => true
+    }
+    val attributes2 = value.foldLeft(attributes1){
+      case (acc, definedValue) =>
+        Seq(Attribute.Unprefixed(name, definedValue)) ++ acc
+    }
+    copy(attributes = attributes2)
+  }
+
+
   override def render(eq0: Queue[HighLevelEvent], nsCtx0: NsImportCtx): Queue[HighLevelEvent] = {
     val nsCtx1 = attributes.foldLeft(nsCtx0.push){
       case (ctx, Attribute.NsImport(addPrefix, addNamespace)) =>
