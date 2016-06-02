@@ -25,8 +25,9 @@ sealed trait Node {
   protected val emptyPosition = Position.withoutPosition
 }
 
-case class Element(ns: String, localName: String, override val attributes: Seq[Attribute], override val children: Seq[Node]) extends Node {
-  override def qName: QName = QName(ns, localName)
+case class Element(override val qName: QName, override val attributes: Seq[Attribute], override val children: Seq[Node]) extends Node {
+  def ns: String = qName.ns
+  def localName: String = qName.localName
 
   override def text: String =
     children.map(_.text).mkString

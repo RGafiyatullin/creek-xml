@@ -1,6 +1,6 @@
 package com.github.rgafiyatullin.creek_xml.dom
 
-import com.github.rgafiyatullin.creek_xml.common.{Attribute, HighLevelEvent}
+import com.github.rgafiyatullin.creek_xml.common.{Attribute, HighLevelEvent, QName}
 import com.github.rgafiyatullin.creek_xml.stream_parser.high_level_parser.NsImportCtx
 
 import scala.collection.immutable.Queue
@@ -44,7 +44,7 @@ object NodeBuilder {
         Complete(CData(text))
 
       case HighLevelEvent.ElementSelfClosing(_, _, localName, namespace, attributes) =>
-        Complete(Element(namespace, localName, attributes, Seq()))
+        Complete(Element(QName(namespace, localName), attributes, Seq()))
 
       case HighLevelEvent.ElementOpen(_, _, localName, namespace, attributes) =>
         Incomplete(namespace, localName, attributes, Queue.empty, None)
@@ -69,7 +69,7 @@ object NodeBuilder {
         Incomplete(childNamespace, childLocalName, childAttributes, Queue.empty, Some(this))
 
       case HighLevelEvent.ElementSelfClosing(_, _, childLocalName, childNamespace, childAttributes) =>
-        copy(children = children.enqueue(Element(childNamespace, childLocalName, filterAttrs(childAttributes), Seq())))
+        copy(children = children.enqueue(Element(QName(childNamespace, childLocalName), filterAttrs(childAttributes), Seq())))
 
       case HighLevelEvent.Comment(_, text) =>
         copy(children = children.enqueue(Comment(text)))
@@ -85,12 +85,12 @@ object NodeBuilder {
           case Some(parent) =>
             parent.copy(
               children = parent.children.enqueue(
-                Element(ns, ln, filterAttrs(attributes), children)
+                Element(QName(ns, ln), filterAttrs(attributes), children)
               ))
 
           case None =>
             Complete(
-              Element(ns, ln, filterAttrs(attributes), children)
+              Element(QName(ns, ln), filterAttrs(attributes), children)
             )
         }
     }

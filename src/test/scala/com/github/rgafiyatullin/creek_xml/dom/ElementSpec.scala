@@ -1,10 +1,10 @@
 package com.github.rgafiyatullin.creek_xml.dom
 
-import com.github.rgafiyatullin.creek_xml.common.Attribute
+import com.github.rgafiyatullin.creek_xml.common.{Attribute, QName}
 import org.scalatest.{FlatSpec, Matchers}
 
 class ElementSpec extends FlatSpec with Matchers {
-  val element = Element("namespace", "local-name", Seq(
+  val element = Element(QName("namespace", "local-name"), Seq(
     Attribute.NsImport("", "namespace"),
     Attribute.Unprefixed("key-1", "value-1"),
     Attribute.Unprefixed("key-2", "value-2"),

@@ -1,6 +1,6 @@
 package com.github.rgafiyatullin.creek_xml.dom
 
-import com.github.rgafiyatullin.creek_xml.common.{Attribute, HighLevelEvent, Position}
+import com.github.rgafiyatullin.creek_xml.common.{Attribute, HighLevelEvent, Position, QName}
 import org.scalatest.{FlatSpec, Matchers}
 
 class NodeBuilderSpec extends FlatSpec with Matchers {
@@ -33,7 +33,7 @@ class NodeBuilderSpec extends FlatSpec with Matchers {
   it should "get complete upon SelfClosing" in {
     val comment = eb.in(HighLevelEvent.ElementSelfClosing(ep, "", "local-name", "namespace", Seq()))
     comment.isComplete should be (true)
-    comment.nodeOption should be (Some(Element("namespace", "local-name", Seq(), Seq())))
+    comment.nodeOption should be (Some(Element(QName("namespace", "local-name"), Seq(), Seq())))
   }
 
   it should "get complete upon a more complex example" in {
@@ -61,18 +61,18 @@ class NodeBuilderSpec extends FlatSpec with Matchers {
 
     val expectedElement =
       Element(
-        "namespace-1", "local-name-1",
+        QName("namespace-1", "local-name-1"),
         Seq(
           Attribute.Unprefixed("attr-1", "value-1")
         ),
         Seq(
-          Element("namespace-1", "local-name-2", Seq(), Seq(
+          Element(QName("namespace-1", "local-name-2"), Seq(), Seq(
             CData("text")
           )),
-          Element("namespace-2", "local-name-3", Seq(), Seq(
+          Element(QName("namespace-2", "local-name-3"), Seq(), Seq(
             PCData("text")
           )),
-          Element("namespace-3", "local-name-4", Seq(), Seq())
+          Element(QName("namespace-3", "local-name-4"), Seq(), Seq())
         ))
 
     builder.isComplete should be (true)
