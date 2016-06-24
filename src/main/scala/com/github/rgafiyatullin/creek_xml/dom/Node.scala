@@ -3,6 +3,7 @@ package com.github.rgafiyatullin.creek_xml.dom
 import com.github.rgafiyatullin.creek_xml.common.{Attribute, HighLevelEvent, Position, QName}
 import com.github.rgafiyatullin.creek_xml.common.Attribute.Unprefixed
 import com.github.rgafiyatullin.creek_xml.stream_parser.high_level_parser.NsImportCtx
+import com.github.rgafiyatullin.creek_xml.stream_writer.high_level_writer.HighLevelWriter
 
 import scala.collection.immutable.Queue
 
@@ -21,6 +22,11 @@ sealed trait Node {
   }
 
   def render(eq: Queue[HighLevelEvent], nsCtx: NsImportCtx = NsImportCtx.empty): Queue[HighLevelEvent]
+
+  def rendered: String =
+    render(Queue.empty)
+      .foldLeft(HighLevelWriter.empty)(_.in(_))
+      .out._1.mkString
 
   protected val emptyPosition = Position.withoutPosition
 }
