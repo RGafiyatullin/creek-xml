@@ -12,6 +12,7 @@ sealed trait Node {
   def text: String
   def attributes: Seq[Attribute] = Seq()
   def children: Seq[Node] = Seq()
+  def childElements: Seq[Element] = children.collect { case e: Element => e }
 
   def attribute(name: String): Option[String] =
     attributes.collectFirst {
