@@ -115,7 +115,7 @@ object DomQuery {
     def processChildren(node: Node, nextPath: Path): Node = {
       val (affectedNodes, children1) = node.children.foldLeft(0, Queue.empty[Option[Node]]) {
         case ((count, acc), ch) if nextPath.matches(ch) =>
-          (count + 1, acc.enqueue(processNode(node, nextPath)))
+          (count + 1, acc.enqueue(processNode(ch, nextPath)))
 
         case (asIs, _) => asIs
       }
