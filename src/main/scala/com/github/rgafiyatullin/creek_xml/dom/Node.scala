@@ -11,8 +11,23 @@ sealed trait Node {
   def qName: QName = QName.empty
   def text: String
   def attributes: Seq[Attribute] = Seq()
+  def setAttributes(attrs: Seq[Attribute]): Node = this
   def children: Seq[Node] = Seq()
   def setChildren(chs: Seq[Node]): Node = this
+
+  def setAttribute(name: String, value: Option[String]): Node = {
+    val attributes1 = attributes.filter {
+      case Attribute.Unprefixed(n, _) if n == name => false
+      case _ => true
+    }
+    val attributes2 = value.foldLeft(attributes1){
+      case (acc, definedValue) =>
+        Seq(Attribute.Unprefixed(name, definedValue)) ++ acc
+    }
+    setAttributes(attributes2)
+  }
+  def setAttribute(name: String, value: String): Node =
+    setAttribute(name, Some(value))
 
   def childElements: Seq[Element] = children.collect { case e: Element => e }
 
@@ -41,21 +56,17 @@ case class Element(override val qName: QName, override val attributes: Seq[Attri
   override def text: String =
     children.map(_.text).mkString
 
-  override def setChildren(chs: Seq[Node]): Node =
+  override def setChildren(chs: Seq[Node]): Element =
     copy(children = chs)
 
-  def setAttribute(name: String, value: Option[String]) = {
-    val attributes1 = attributes.filter {
-      case Attribute.Unprefixed(n, _) if n == name => false
-      case _ => true
-    }
-    val attributes2 = value.foldLeft(attributes1){
-      case (acc, definedValue) =>
-        Seq(Attribute.Unprefixed(name, definedValue)) ++ acc
-    }
-    copy(attributes = attributes2)
-  }
+  override def setAttributes(attrs: Seq[Attribute]): Element =
+    copy(attributes = attrs)
 
+  override def setAttribute(name: String, value: String): Element =
+    super.setAttribute(name, value).asInstanceOf[Element]
+
+  override def setAttribute(name: String, value: Option[String]): Element =
+    super.setAttribute(name, value).asInstanceOf[Element]
 
   override def render(eq0: Queue[HighLevelEvent], nsCtx0: NsImportCtx): Queue[HighLevelEvent] = {
     val nsCtx1 = attributes.foldLeft(nsCtx0.push){

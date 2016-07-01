@@ -19,6 +19,19 @@ class NodeWithQueries(node: Node) {
   def delete(predicate: Predicate): Node =
     delete(Path(Queue(predicate)))
 
-  def update = ???
-  def upsert = ???
+  def update(path: Path)(f: Node => Node): Node = {
+    val query = DomQuery.Update(path, f)
+    query(node)
+  }
+
+  def update(predicate: Predicate): (Node => Node) => Node =
+    update(Path(Queue(predicate)))
+
+  def upsert(path: Path)(f: Node => Option[Node]): Node = {
+    val query = DomQuery.Upsert(path, f)
+    query(node)
+  }
+
+  def upsert(predicate: Predicate): (Node => Option[Node]) => Node =
+    upsert(Path(Queue(predicate)))
 }

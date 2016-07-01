@@ -11,55 +11,125 @@ object DomQuery {
 
   case class Select(path: Path) extends DomQuery {
     def apply(node: Node): Seq[Node] =
-      node
-        .children
-        .foldLeft(Queue.empty[Node])(process(_, _, path))
+      processChildren(Queue.empty, node, path)
 
-    private def process(acc0: Queue[Node], node: Node, path: Path): Queue[Node] =
+    private def processNode(acc0: Queue[Node], node: Node, path: Path): Queue[Node] =
       (path.matches(node), path.isLast) match {
         case (true, true) =>
           acc0.enqueue(node)
         case (true, false) =>
           val nextPath = path.next
-          node
-            .children
-            .foldLeft(acc0)(process(_, _, nextPath))
+          processChildren(acc0, node, nextPath)
         case (_, _) =>
           acc0
       }
+
+    private def processChildren(acc0: Queue[Node], node: Node, nextPath: Path): Queue[Node] =
+      node.children
+        .foldLeft(acc0)(processNode(_, _, nextPath))
   }
 
   case class Delete(path: Path) extends DomQuery {
-    def apply(node: Node): Node = {
+    def apply(node: Node): Node =
+      processChildren(node, path)
+
+
+    private def processChildren(node: Node, nextPath: Path): Node =
       node.setChildren(
         node.children.map(
-          processNode(_, path))
+          processNode(_, nextPath))
           .collect({
-            case Some(ch) => ch }))
-    }
+            case Some(ch) => ch}))
 
-    private def processNode(node: Node, path: Path): Option[Node] = {
+    private def processNode(node: Node, path: Path): Option[Node] =
       (path.matches(node), path.isLast) match {
         case (true, true) =>
           None
 
         case (true, false) =>
           val nextPath = path.next
-          Some(
-            node.setChildren(
-              node.children.map(
-                processNode(_, nextPath))
-                .collect({
-                  case Some(ch) => ch })))
+          Some(processChildren(node, nextPath))
 
         case (_, _) =>
           Some(node)
       }
-    }
+
   }
 
-  case class Update(path: Path, f: Node => Node) extends DomQuery
-  case class Upsert(path: Path, f: Option[Node] => Option[Node]) extends DomQuery
+  case class Update(path: Path, f: Node => Node) extends DomQuery {
+    def apply(node: Node): Node =
+      processChildren(node, path)
+
+    private def processNode(node: Node, path: Path): Node = {
+      (path.matches(node), path.isLast) match {
+        case (true, true) =>
+          f(node)
+
+        case (true, false) =>
+          processChildren(node, path.next)
+
+        case (_, _) =>
+          node
+      }
+    }
+
+    private def processChildren(node: Node, nextPath: Path): Node =
+      node.setChildren(
+        node.children.map(
+          processNode(_, nextPath)))
+
+
+  }
+  case class Upsert(path: Path, f: Node => Option[Node]) extends DomQuery {
+    def apply(node: Node): Node =
+      processChildren(node, path)
+
+
+    def processNode(node: Node, path: Path): Option[Node] =
+      (path.matches(node), path.isLast) match {
+        case (true, true) =>
+          f(node)
+
+        case (true, false) =>
+          Some(processChildren(node, path.next))
+
+        case (_, _) =>
+          Some(node)
+      }
+
+    def createAndProcessNode(path: Path): Option[Node] =
+      for {
+        predicate <- path.headOption
+        qName <- predicate.qNameOption
+        attributes = predicate.attributes
+        node <-
+          if (path.isLast)
+            f(Element(qName, attributes, Seq()))
+          else
+            for {child <- createAndProcessNode(path.next)}
+              yield Element(qName, attributes, Seq(child))
+      }
+        yield node
+
+
+    def processChildren(node: Node, nextPath: Path): Node = {
+      val (affectedNodes, children1) = node.children.foldLeft(0, Queue.empty[Option[Node]]) {
+        case ((count, acc), ch) if nextPath.matches(ch) =>
+          (count + 1, acc.enqueue(processNode(node, nextPath)))
+
+        case (asIs, _) => asIs
+      }
+      val children2 =
+        if (affectedNodes != 0) children1
+        else
+          children1.enqueue(createAndProcessNode(nextPath))
+
+      node
+        .setChildren(
+          children2.collect { case Some(ch) => ch })
+    }
+
+  }
 }
 
 trait DomQuery
