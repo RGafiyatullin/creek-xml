@@ -12,6 +12,8 @@ sealed trait Node {
   def text: String
   def attributes: Seq[Attribute] = Seq()
   def children: Seq[Node] = Seq()
+  def setChildren(chs: Seq[Node]): Node = this
+
   def childElements: Seq[Element] = children.collect { case e: Element => e }
 
   def attribute(name: String): Option[String] =
@@ -38,6 +40,9 @@ case class Element(override val qName: QName, override val attributes: Seq[Attri
 
   override def text: String =
     children.map(_.text).mkString
+
+  override def setChildren(chs: Seq[Node]): Node =
+    copy(children = chs)
 
   def setAttribute(name: String, value: Option[String]) = {
     val attributes1 = attributes.filter {
