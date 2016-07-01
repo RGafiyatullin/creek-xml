@@ -29,8 +29,6 @@ sealed trait Node {
   def setAttribute(name: String, value: String): Node =
     setAttribute(name, Some(value))
 
-  def childElements: Seq[Element] = children.collect { case e: Element => e }
-
   def attribute(name: String): Option[String] =
     attributes.collectFirst {
       case Unprefixed(n, v) if n == name => v }
@@ -61,12 +59,6 @@ case class Element(override val qName: QName, override val attributes: Seq[Attri
 
   override def setAttributes(attrs: Seq[Attribute]): Element =
     copy(attributes = attrs)
-
-  override def setAttribute(name: String, value: String): Element =
-    super.setAttribute(name, value).asInstanceOf[Element]
-
-  override def setAttribute(name: String, value: Option[String]): Element =
-    super.setAttribute(name, value).asInstanceOf[Element]
 
   override def render(eq0: Queue[HighLevelEvent], nsCtx0: NsImportCtx): Queue[HighLevelEvent] = {
     val nsCtx1 = attributes.foldLeft(nsCtx0.push){
