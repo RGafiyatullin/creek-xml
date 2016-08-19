@@ -146,6 +146,14 @@ class HighLevelParserSpec extends FlatSpec with Matchers {
     p1.inputBuffer.mkString should be ("\nSome rubbish goes here...")
   }
 
+  it should "parse #10 (russian text)" in {
+    common("<text xmlns='namespace'>text по-русски trentemøller</text>", Seq(
+      HighLevelEvent.ElementOpen(ep, "", "text", "namespace", Seq(Attribute.NsImport("", "namespace"))),
+      HighLevelEvent.PCData(ep, "text по-русски trentemøller"),
+      HighLevelEvent.ElementClose(ep, "", "text", "namespace")
+    ))
+  }
+
 
 
 
