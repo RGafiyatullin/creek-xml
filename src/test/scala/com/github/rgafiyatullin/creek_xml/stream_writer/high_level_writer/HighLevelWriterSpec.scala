@@ -13,8 +13,8 @@ class HighLevelWriterSpec extends FlatSpec with Matchers {
       HighLevelEvent.ElementOpen(ep, "streams", "stream", "streams-namespace", Seq(
         Attribute.NsImport("streams", "streams-namespace"),
         Attribute.NsImport("", "jabber:client"),
-        Attribute.Unprefixed("to", "im.localhost"),
-        Attribute.Prefixed("streams", "local-name", "value")
+        Attribute.Unprefixed("to", "im.&localhost"),
+        Attribute.Prefixed("streams", "local-name", "value&")
       )),
       HighLevelEvent.ElementSelfClosing(ep, "streams", "features", "streams-namespace", Seq()),
       HighLevelEvent.ElementClose(ep, "streams", "stream", "streams-namespace")
@@ -28,8 +28,8 @@ class HighLevelWriterSpec extends FlatSpec with Matchers {
         "<streams:stream" +
         " xmlns:streams='streams-namespace'" +
         " xmlns='jabber:client'" +
-        " to='im.localhost'" +
-        " streams:local-name='value'" +
+        " to='im.&amp;localhost'" +
+        " streams:local-name='value&amp;'" +
         ">" +
         "<streams:features" +
         "/>" +

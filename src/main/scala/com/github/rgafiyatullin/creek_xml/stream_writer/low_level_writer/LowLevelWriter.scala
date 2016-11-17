@@ -9,9 +9,21 @@ object LowLevelWriter {
 }
 
 case class LowLevelWriter(outBuffer: Queue[String]) {
-  private def sanitizeCDataContent(s: String): String = s
+  private def sanitizeCDataContent(s: String): String =
+    s.replace("]]>", "]]]><![CDATA[]>")
 
-  private def sanitizePCDataContent(s: String): String = s
+  private def sanitizePCDataContent(s: String): String =
+    s.foldLeft(new StringBuilder()){
+      case (b, ch) =>
+        ch match {
+          case '&' => b.append("&amp;")
+          case '<' => b.append("&lt;")
+          case '>' => b.append("&gt;")
+          case '"' => b.append("&quot;")
+          case '\'' => b.append("&apos;")
+          case other => b.append(ch)
+        }
+    }.toString()
 
   def in(lowLevelEvent: LowLevelEvent): LowLevelWriter = {
     val eventRendered = lowLevelEvent match {
@@ -52,10 +64,10 @@ case class LowLevelWriter(outBuffer: Queue[String]) {
         "/>"
 
       case LowLevelEvent.PrefixedAttribute(_, prefix, localName, value) =>
-        s" $prefix:$localName='$value'"
+        s" $prefix:$localName='${sanitizePCDataContent(value)}'"
 
       case LowLevelEvent.UnprefixedAttribute(_, name, value) =>
-        s" $name='$value'"
+        s" $name='${sanitizePCDataContent(value)}'"
 
       case LowLevelEvent.ProcessingInstruction(_, target, content) =>
         s"<?$target $content?>"
