@@ -6,6 +6,8 @@ import com.github.rgafiyatullin.creek_xml.stream_parser.low_level_parser.LowLeve
 sealed trait HighLevelParserError extends Throwable {
   def position: Position
   def description: String
+
+  override def getMessage: String = description
 }
 
 object HighLevelParserError {

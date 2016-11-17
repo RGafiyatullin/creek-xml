@@ -9,16 +9,20 @@ object LowLevelWriter {
 }
 
 case class LowLevelWriter(outBuffer: Queue[String]) {
+  private def sanitizeCDataContent(s: String): String = s
+
+  private def sanitizePCDataContent(s: String): String = s
+
   def in(lowLevelEvent: LowLevelEvent): LowLevelWriter = {
     val eventRendered = lowLevelEvent match {
       case LowLevelEvent.Whitespace(_, text) =>
         text
 
       case LowLevelEvent.CData(_, text) =>
-        s"<![CDATA[$text]]>"
+        s"<![CDATA[" + sanitizeCDataContent(text) + "]]>"
 
       case LowLevelEvent.PCData(_, text) =>
-        text
+        sanitizePCDataContent(text)
 
       case LowLevelEvent.Comment(_, text) =>
         s"<!--$text-->"

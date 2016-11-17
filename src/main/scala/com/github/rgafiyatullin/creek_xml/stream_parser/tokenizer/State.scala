@@ -30,10 +30,77 @@ object State {
   case object Normal extends State {
     override def processChar(position: Position): ProcessChar = {
       case '<' => (Seq(), CornerBracketOpen)
+      case '&' => (Seq(), XmlEntity(XmlEntitySubState.Amp))
       case ch if isWhitespace(ch) => (Seq(Token.Whitespace(position, ch)), Normal)
       case ch => (Seq(Token.Character(position, ch)), Normal)
     }
   }
+
+  final case class XmlEntity(s: XmlEntitySubState) extends State {
+    val S = XmlEntitySubState
+
+    override def processChar(position: Position): ProcessChar = {
+      case 'l' if s == S.Amp => (Seq(), XmlEntity(S.AmpL))
+      case 't' if s == S.AmpL => (Seq(), XmlEntity(S.AmpLT))
+      case ';' if s == S.AmpLT => (Seq(Token.Character(position, '<')), Normal)
+
+      case 'g' if s == S.Amp => (Seq(), XmlEntity(S.AmpG))
+      case 't' if s == S.AmpG => (Seq(), XmlEntity(S.AmpGT))
+      case ';' if s == S.AmpGT => (Seq(Token.Character(position, '>')), Normal)
+
+      case 'a' if s == S.Amp => (Seq(), XmlEntity(S.AmpA))
+      case 'm' if s == S.AmpA => (Seq(), XmlEntity(S.AmpAM))
+      case 'p' if s == S.AmpAM => (Seq(), XmlEntity(S.AmpAMP))
+      case ';' if s == S.AmpAMP => (Seq(Token.Character(position, '&')), Normal)
+
+      case 'p' if s == S.AmpA => (Seq(), XmlEntity(S.AmpAP))
+      case 'o' if s == S.AmpAP => (Seq(), XmlEntity(S.AmpAPO))
+      case 's' if s == S.AmpAPO => (Seq(), XmlEntity(S.AmpAPOS))
+      case ';' if s == S.AmpAPOS => (Seq(Token.Character(position, '\'')), Normal)
+
+      case 'q' if s == S.Amp => (Seq(), XmlEntity(S.AmpQ))
+      case 'u' if s == S.AmpQ => (Seq(), XmlEntity(S.AmpQU))
+      case 'o' if s == S.AmpQU => (Seq(), XmlEntity(S.AmpQUO))
+      case 't' if s == S.AmpQUO => (Seq(), XmlEntity(S.AmpQUOT))
+      case ';' if s == S.AmpQUOT => (Seq(Token.Character(position, '"')), Normal)
+
+      case '#' if s == S.Amp => (Seq(), XmlEntity(S.AmpPound))
+      case 'x' if s == S.AmpPound => (Seq(), XmlEntity(S.AmpPoundX))
+      case 'X' if s == S.AmpPound => (Seq(), XmlEntity(S.AmpPoundX))
+
+      case ch if S.isDecOrHexDigit(ch) =>
+        s match {
+          case S.AmpPound if ch.isDigit =>
+            (Seq(), XmlEntity(S.AmpPoundD(ch)))
+          case S.AmpPoundX =>
+            (Seq(), XmlEntity(S.AmpPoundXH(ch)))
+
+          case S.AmpPoundD(a) if ch.isDigit =>
+            (Seq(), XmlEntity(S.AmpPoundDD(a, ch)))
+          case S.AmpPoundDD(a, b) if ch.isDigit =>
+            (Seq(), XmlEntity(S.AmpPoundDDD(a, b, ch)))
+          case S.AmpPoundDDD(a, b, c) if ch.isDigit =>
+            (Seq(), XmlEntity(S.AmpPoundDDDD(a, b, c, ch)))
+
+          case S.AmpPoundXH(a) =>
+            (Seq(), XmlEntity(S.AmpPoundXHH(a, ch)))
+          case S.AmpPoundXHH(a, b) =>
+            (Seq(), XmlEntity(S.AmpPoundXHHH(a, b, ch)))
+          case S.AmpPoundXHHH(a, b, c) =>
+            (Seq(), XmlEntity(S.AmpPoundXHHHH(a, b, c, ch)))
+        }
+
+      case ';' =>
+        s match  {
+          case S.AmpPoundXHHHH(a, b, c, d) =>
+            (Seq(Token.Character(position, S.hexChar(a, b, c, d))), Normal)
+
+          case S.AmpPoundDDDD(a, b, c, d) if d.isDigit =>
+            (Seq(Token.Character(position, S.decChar(a, b, c, d))), Normal)
+        }
+    }
+  }
+
 
   // Met '<'
   case object CornerBracketOpen extends State {

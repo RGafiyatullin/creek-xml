@@ -41,8 +41,6 @@ class TokenizerSpec extends FlatSpec with Matchers {
       "type=\"text/xsl\" href=\"style.xsl\" q-mark-containing=\"???\" ")
   }
 
-
-
   it should "tokenize CDATA no brackets" in {
     cdataCommon("<![CDATA[simple]]>", "simple")
   }
@@ -69,6 +67,13 @@ class TokenizerSpec extends FlatSpec with Matchers {
 
   it should "tokenize CDATA with three extra brackets in the end" in {
     cdataCommon("<![CDATA[three extra brackets]]]]]>", "three extra brackets]]]")
+  }
+
+  it should "tokenize CDATA with something similar to xml-entities" in {
+    common("<![CDATA[&amp;]]>", Seq(
+      Token.CDataOpen(ep),
+      Token.CDataContent(ep, "&amp;"),
+      Token.CDataClose(ep)))
   }
 
   it should "tokenize #1 (open-tag)" in {
@@ -195,6 +200,44 @@ class TokenizerSpec extends FlatSpec with Matchers {
       Token.Whitespace(ep, ' '),
       Token.Whitespace(ep, '\r'),
       Token.Whitespace(ep, '\n'),
+      Token.Character(ep, 'b'),
+      Token.LtSlash(ep),
+      Token.XmlName(ep, "text"),
+      Token.Gt(ep)
+    ))
+  }
+
+  it should "tokenize #12 (pcdata with xml-entities)" in {
+    common("<text>a&amp;&lt;&gt;&quot;&apos;b</text>", Seq(
+      Token.Lt(ep),
+      Token.XmlName(ep, "text"),
+      Token.Gt(ep),
+      Token.Character(ep, 'a'),
+      Token.Character(ep, '&'),
+      Token.Character(ep, '<'),
+      Token.Character(ep, '>'),
+      Token.Character(ep, '"'),
+      Token.Character(ep, '''),
+      Token.Character(ep, 'b'),
+      Token.LtSlash(ep),
+      Token.XmlName(ep, "text"),
+      Token.Gt(ep)
+    ))
+  }
+
+  it should "tokenize #13 (pcdata with xml-entities)" in {
+    common("<text>a&amp;&lt;&gt;&quot;&apos;&#x2229;&#8745;b</text>", Seq(
+      Token.Lt(ep),
+      Token.XmlName(ep, "text"),
+      Token.Gt(ep),
+      Token.Character(ep, 'a'),
+      Token.Character(ep, '&'),
+      Token.Character(ep, '<'),
+      Token.Character(ep, '>'),
+      Token.Character(ep, '"'),
+      Token.Character(ep, '''),
+      Token.Character(ep, '∩'),
+      Token.Character(ep, '∩'),
       Token.Character(ep, 'b'),
       Token.LtSlash(ep),
       Token.XmlName(ep, "text"),

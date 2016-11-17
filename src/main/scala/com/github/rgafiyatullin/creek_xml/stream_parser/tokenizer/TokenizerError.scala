@@ -5,6 +5,8 @@ import com.github.rgafiyatullin.creek_xml.common.Position
 sealed trait TokenizerError extends Throwable {
   def position: Position
   def description: String
+
+  override def getMessage: String = description
 }
 
 object TokenizerError {

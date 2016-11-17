@@ -154,10 +154,13 @@ class HighLevelParserSpec extends FlatSpec with Matchers {
     ))
   }
 
-
-
-
-
+  it should "parse #11 (xml-entities)" in {
+    common("<text xmlns='namespace'>pre&amp;&lt;&gt;&quot;&apos;post</text>", Seq(
+      HighLevelEvent.ElementOpen(ep, "", "text", "namespace", Seq(Attribute.NsImport("", "namespace"))),
+      HighLevelEvent.PCData(ep, "pre&<>\"'post"),
+      HighLevelEvent.ElementClose(ep, "", "text", "namespace")
+    ))
+  }
 
 
   private def common(input: String, expectedEvents: Seq[HighLevelEvent]): Unit = {

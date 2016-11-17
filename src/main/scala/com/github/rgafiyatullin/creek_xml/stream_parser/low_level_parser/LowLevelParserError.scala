@@ -6,6 +6,8 @@ import com.github.rgafiyatullin.creek_xml.stream_parser.tokenizer.{Token, Tokeni
 sealed trait LowLevelParserError extends Throwable {
   def position: Position
   def description: String
+
+  override def getMessage: String = description
 }
 
 object LowLevelParserError {
