@@ -2,7 +2,7 @@ package com.github.rgafiyatullin.creek_xml.stream_parser.tokenizer
 
 import com.github.rgafiyatullin.creek_xml.common.Position
 
-sealed trait TokenizerError extends Throwable {
+sealed trait TokenizerError extends Exception {
   def position: Position
   def description: String
 

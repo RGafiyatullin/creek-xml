@@ -3,7 +3,7 @@ package com.github.rgafiyatullin.creek_xml.stream_parser.high_level_parser
 import com.github.rgafiyatullin.creek_xml.common.{LowLevelEvent, Position}
 import com.github.rgafiyatullin.creek_xml.stream_parser.low_level_parser.LowLevelParserError
 
-sealed trait HighLevelParserError extends Throwable {
+sealed trait HighLevelParserError extends Exception {
   def position: Position
   def description: String
 
