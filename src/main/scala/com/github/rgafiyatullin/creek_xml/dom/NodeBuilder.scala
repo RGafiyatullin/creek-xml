@@ -55,6 +55,9 @@ object NodeBuilder {
 
       case HighLevelEvent.Whitespace(_, _) =>
         this
+
+      case HighLevelEvent.ProcessingInstrutcion(_, _, _) =>
+        this
     }
   }
 
@@ -88,6 +91,9 @@ object NodeBuilder {
         copy(children = children.enqueue(PCData(text)))
 
       case HighLevelEvent.Whitespace(_, _) =>
+        this
+
+      case HighLevelEvent.ProcessingInstrutcion(_, _, _) =>
         this
 
       case HighLevelEvent.ElementClose(_, _, ln, ns) if (ln, ns) == (localName, namespace) =>

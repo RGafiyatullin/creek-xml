@@ -1,6 +1,6 @@
 name := "creek-xml"
 
-version := "0.1.4"
+version := "0.1.5"
 organization := "com.github.rgafiyatullin"
 
 publishTo := {
