@@ -52,6 +52,9 @@ object NodeBuilder {
 
       case HighLevelEvent.ElementOpen(_, _, localName, namespace, attributes) =>
         Incomplete(namespace, localName, attributes, Queue.empty, None)
+
+      case HighLevelEvent.Whitespace(_, _) =>
+        this
     }
   }
 
@@ -83,6 +86,9 @@ object NodeBuilder {
 
       case HighLevelEvent.PCData(_, text) =>
         copy(children = children.enqueue(PCData(text)))
+
+      case HighLevelEvent.Whitespace(_, _) =>
+        this
 
       case HighLevelEvent.ElementClose(_, _, ln, ns) if (ln, ns) == (localName, namespace) =>
         parentOption match {
