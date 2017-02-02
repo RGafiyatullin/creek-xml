@@ -15,14 +15,18 @@ sealed trait NodeBuilder {
   protected def handleEvent: ProcessEvent
 
   def in(highLevelEvent: HighLevelEvent): NodeBuilder =
-    handleEvent.applyOrElse(highLevelEvent, unhandledEvent _)
+    handleEvent.applyOrElse(highLevelEvent, unhandledEvent(_: HighLevelEvent, this))
 
 
 
-  private def unhandledEvent(highLevelEvent: HighLevelEvent): Nothing = ???
+  private def unhandledEvent(highLevelEvent: HighLevelEvent, nodeBuilder: NodeBuilder): Nothing = throw NodeBuilder.UnhandledEvent(highLevelEvent, nodeBuilder)
 }
 
 object NodeBuilder {
+  final case class UnhandledEvent(e: HighLevelEvent, nb: NodeBuilder) extends Exception {
+    override def getMessage = "Unhandled HLE: %s while NodeBuilder: %s".format(e, nb)
+  }
+
   def empty: NodeBuilder = Empty()
 
 
