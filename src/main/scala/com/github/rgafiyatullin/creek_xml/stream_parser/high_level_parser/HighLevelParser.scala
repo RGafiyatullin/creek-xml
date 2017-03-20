@@ -1,6 +1,6 @@
 package com.github.rgafiyatullin.creek_xml.stream_parser.high_level_parser
 
-import com.github.rgafiyatullin.creek_xml.common.{HighLevelEvent, LowLevelEvent}
+import com.github.rgafiyatullin.creek_xml.common.{HighLevelEvent, LowLevelEvent, Position}
 import com.github.rgafiyatullin.creek_xml.stream_parser.low_level_parser.{LowLevelParser, LowLevelParserError}
 
 import scala.collection.immutable.Queue
@@ -14,6 +14,9 @@ object HighLevelParser {
 }
 
 case class HighLevelParser(llParser: LowLevelParser, output: Queue[HighLevelEvent], state: HighLevelState) {
+  def registerPrefix(prefix: String, namespace: String): HighLevelParser =
+    copy(state = state.withNsImportCtx { nsImports => nsImports.add(Position.withoutPosition, prefix, namespace) })
+
   def withoutPosition: HighLevelParser =
     copy(llParser = llParser.withoutPosition)
 

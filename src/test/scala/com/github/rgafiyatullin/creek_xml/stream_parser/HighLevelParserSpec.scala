@@ -162,11 +162,25 @@ class HighLevelParserSpec extends FlatSpec with Matchers {
     ))
   }
 
+  it should "parse #12 (manually registered prefix)" in {
+    common("<?xml version='1.0' ?><stream:stream to='c2s.qamain.xmppcs.dev' xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams'  xml:lang='en' version='1.0'>",
+      Seq(
+        HighLevelEvent.ProcessingInstrutcion(ep, "xml", "version='1.0' "),
+        HighLevelEvent.ElementOpen(ep, "stream", "stream", "http://etherx.jabber.org/streams", Seq(
+          Attribute.Unprefixed("to", "c2s.qamain.xmppcs.dev"),
+          Attribute.NsImport("", "jabber:client"),
+          Attribute.NsImport("stream", "http://etherx.jabber.org/streams"),
+          Attribute.Prefixed("xml", "lang", "en"),
+          Attribute.Unprefixed("version", "1.0")
+        ))
+      ), HighLevelParser.empty.withoutPosition.registerPrefix("xml", "__xml__"))
+  }
 
-  private def common(input: String, expectedEvents: Seq[HighLevelEvent]): Unit = {
-    val p0 = HighLevelParser.empty.withoutPosition.in(input)
-    val p1 = checkExpectedEvents(p0)(expectedEvents)
-    ensureParserInputUnderrun(p1)
+
+  private def common(input: String, expectedEvents: Seq[HighLevelEvent], p0: HighLevelParser = HighLevelParser.empty.withoutPosition): Unit = {
+    val p1 = p0.in(input)
+    val p2 = checkExpectedEvents(p1)(expectedEvents)
+    ensureParserInputUnderrun(p2)
   }
 
   private def checkExpectedEvents(p0: HighLevelParser)(expectedEvents: Seq[HighLevelEvent]): HighLevelParser = {

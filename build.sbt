@@ -1,13 +1,13 @@
 name := "creek-xml"
 
-version := "0.1.6"
+version := "0.1.7"
 organization := "com.github.rgafiyatullin"
 
 publishTo := {
-  val nexus = "http://am3-v-perftest-xmppcs-1.be.core.pw:8081/"
-  Some("releases"  at nexus + "content/repositories/sbt-releases")
+  val nexus = "http://nexus.in-docker.localhost:8081/"
+  Some("releases"  at nexus + "repository/my-releases")
 }
-credentials += Credentials(Path.userHome / ".ivy2" / ".credentials")
+credentials += Credentials(Path.userHome / ".ivy2" / ".credentials.local")
 
 scalaVersion in ThisBuild := "2.11.7"
 

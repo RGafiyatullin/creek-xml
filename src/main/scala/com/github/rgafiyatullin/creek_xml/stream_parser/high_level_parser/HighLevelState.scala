@@ -13,6 +13,8 @@ sealed trait HighLevelState {
   protected def ensurePrefix(prefix: String, pos: Position, nsImports: NsImportCtx): Unit =
     if (nsImports.resolvePrefix(prefix).isEmpty)
       throw HighLevelParserError.UndeclaredPrefix(pos, prefix)
+
+  def withNsImportCtx(f: NsImportCtx => NsImportCtx): HighLevelState
 }
 
 object HighLevelState {
@@ -21,6 +23,8 @@ object HighLevelState {
 
   final case class EndOfDocument() extends HighLevelState {
     override def processLowLevelEvent: ProcessLowLevelEvent = ???
+
+    override def withNsImportCtx(f: (NsImportCtx) => NsImportCtx) = this
   }
 
   final case class Normal(nsImports: NsImportCtx, parent: Option[Normal]) extends HighLevelState {
@@ -52,6 +56,8 @@ object HighLevelState {
       case LowLevelEvent.Comment(pos, text) =>
         (Seq(HighLevelEvent.Comment(pos, text)), this)
     }
+
+    override def withNsImportCtx(f: (NsImportCtx) => NsImportCtx) = copy(nsImports = f(nsImports))
   }
 
   final case class OpeningElement(
@@ -86,6 +92,8 @@ object HighLevelState {
         ensurePrefixes(pos)
         (Seq(HighLevelEvent.ElementSelfClosing(
           pos, prefix, localName, nsImports.resolvePrefix(prefix).get, attributes)), parent)
+
+
     }
 
     private def ensurePrefixes(pos: Position): Unit = {
@@ -104,6 +112,8 @@ object HighLevelState {
         pos,  prefix, localName, nsImports.resolvePrefix(prefix).get,
         attributes
       )
+
+    override def withNsImportCtx(f: (NsImportCtx) => NsImportCtx) = copy(nsImports = f(nsImports))
   }
 
 }
