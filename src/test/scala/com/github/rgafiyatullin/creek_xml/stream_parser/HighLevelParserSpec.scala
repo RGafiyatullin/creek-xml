@@ -12,6 +12,7 @@ class HighLevelParserSpec extends FlatSpec with Matchers {
   "An empty HighLevelParser" should "throw input-underrun error" in {
     val p0 = HighLevelParser.empty.withoutPosition
     ensureParserInputUnderrun(p0)
+    ()
   }
 
   "A HighLevelParser" should "parse #1 (element open)" in {
@@ -181,6 +182,7 @@ class HighLevelParserSpec extends FlatSpec with Matchers {
     val p1 = p0.in(input)
     val p2 = checkExpectedEvents(p1)(expectedEvents)
     ensureParserInputUnderrun(p2)
+    ()
   }
 
   private def checkExpectedEvents(p0: HighLevelParser)(expectedEvents: Seq[HighLevelEvent]): HighLevelParser = {

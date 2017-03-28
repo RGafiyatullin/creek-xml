@@ -37,7 +37,7 @@ object State {
   }
 
   final case class XmlEntity(s: XmlEntitySubState) extends State {
-    val S = XmlEntitySubState
+    import com.github.rgafiyatullin.creek_xml.stream_parser.tokenizer.{XmlEntitySubState => S}
 
     override def processChar(position: Position): ProcessChar = {
       case 'l' if s == S.Amp => (Seq(), XmlEntity(S.AmpL))

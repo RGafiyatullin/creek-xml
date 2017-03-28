@@ -11,6 +11,7 @@ class TokenizerSpec extends FlatSpec with Matchers {
     intercept[TokenizerError.InputBufferUnderrun] {
       Tokenizer.empty.out
     }
+    ()
   }
 
   "A tokenizer" should "return a copy with an ephemeral position from withoutPosition-method" in {
@@ -256,6 +257,7 @@ class TokenizerSpec extends FlatSpec with Matchers {
     intercept[TokenizerError.InputBufferUnderrun] {
       tz1.out
     }
+    ()
   }
 
   private def cdataCommon(cdata: String, cdataContent: String): Unit = {

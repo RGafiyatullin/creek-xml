@@ -14,6 +14,6 @@ class DomQueryUpsertTest extends FlatSpec with Matchers {
           && xmu.children.exists(
           status =>
             status.qName == names.xmus
-              && status.attribute("status").contains("110")))
+              && status.attribute("status").contains("110"))) should be (true)
   }
 }

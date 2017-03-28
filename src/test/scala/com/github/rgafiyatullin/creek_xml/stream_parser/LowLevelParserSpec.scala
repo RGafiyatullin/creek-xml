@@ -11,6 +11,7 @@ class LowLevelParserSpec extends FlatSpec with Matchers {
   "An empty LowLevelParser" should "throw input-underrun error" in {
     val p0 = LowLevelParser.empty.withoutPosition
     ensureParserInputUnderrun(p0)
+    ()
   }
 
   "A LowLevelParser" should "parse #1 (processing instruction)" in {
@@ -165,6 +166,7 @@ class LowLevelParserSpec extends FlatSpec with Matchers {
       LowLevelEvent.CloseElement(ep, "", "a")
     ))
     ensureParserInputUnderrun(p0_aboutToUnderrunAgain)
+    ()
   }
 
 
@@ -172,6 +174,7 @@ class LowLevelParserSpec extends FlatSpec with Matchers {
     val p0 = LowLevelParser.empty.withoutPosition.in(input)
     val p1 = checkExpectedEvents(p0)(expectedEvents)
     ensureParserInputUnderrun(p1)
+    ()
   }
 
   private def checkExpectedEvents(p0: LowLevelParser)(expectedEvents: Seq[LowLevelEvent]): LowLevelParser = {
