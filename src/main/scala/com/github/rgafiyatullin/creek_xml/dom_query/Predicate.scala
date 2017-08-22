@@ -69,6 +69,39 @@ object Predicate {
       Seq()
   }
 
+  final case class NsIs(ns: String) extends Predicate {
+    override def qNameOption: Option[QName] =
+      None
+
+    override def attributes: Seq[Attribute] =
+      Seq.empty
+
+    override def apply(node: Node): Boolean =
+      node.qName.ns == ns
+  }
+
+  final case class LocalNameIs(localName: String) extends Predicate {
+    override def qNameOption: Option[QName] =
+      None
+
+    override def attributes: Seq[Attribute] =
+      Seq.empty
+
+    override def apply(node: Node): Boolean =
+      node.qName.localName == localName
+  }
+
+  final case class Func(predicate: Node => Boolean) extends Predicate {
+    override def qNameOption: Option[QName] =
+      None
+
+    override def attributes: Seq[Attribute] =
+      Seq.empty
+
+    override def apply(node: Node): Boolean =
+      predicate(node)
+  }
+
   final case class UnprefixedAttrIs(key: String, value: String) extends Predicate {
     override def apply(node: Node): Boolean =
       node.attribute(key).contains(value)

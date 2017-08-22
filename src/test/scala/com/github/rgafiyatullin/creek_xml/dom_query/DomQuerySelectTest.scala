@@ -45,4 +45,12 @@ class DomQuerySelectTest extends FlatSpec with Matchers {
     val nonEmptySeq = inputs.p1 select names.xmu / (names.xmus and attrs.status.s201)
     nonEmptySeq should be (inputs.p1.children.head.children.tail.tail)
   }
+
+  "Predicate.NsIs" should "select by NS" in {
+    val emptySeq = inputs.p0 select Predicate.NsIs(names.xmu.ns) / (Predicate.NsIs(names.xmus.ns) and attrs.status.s201)
+    emptySeq should be (empty)
+
+    val nonEmptySeq = inputs.p1 select Predicate.NsIs(names.xmu.ns) / (Predicate.NsIs(names.xmus.ns) and attrs.status.s201)
+    nonEmptySeq should be (inputs.p1.children.head.children.tail.tail)
+  }
 }
