@@ -1,6 +1,6 @@
 name := "creek-xml"
 
-version := "0.1.9"
+version := "0.1.9.1"
 organization := "com.github.rgafiyatullin"
 
 scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")

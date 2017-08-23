@@ -71,6 +71,7 @@ object NodeBuilder {
   {
     private def filterAttrs(attrs: Seq[Attribute]): Seq[Attribute] = attrs.filter {
       case Attribute.NsImport(_, _) => false
+      case Attribute.Prefixed(_, _, _) => false
       case _ => true
     }
 
